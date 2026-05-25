@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu - But First, Coffee</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #111111;
+            --paper: #f8f2e6;
+            --gold: #f3c768;
+            --gold-soft: rgba(243, 199, 104, 0.16);
+            --coffee: #704129;
+            --latte: #d8b58a;
+            --char: #1a1a1f;
+            --panel: rgba(12, 14, 20, 0.62);
+            --line: rgba(255, 255, 255, 0.14);
+            --glow: 0 24px 44px rgba(0, 0, 0, 0.28);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at 85% 5%, rgba(243, 199, 104, 0.18), transparent 38%), linear-gradient(155deg, #0f1014 0%, #15161c 48%, #111111 100%);
+            color: #f8f4ec;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .header {
+            position: relative;
+            z-index: 2;
+            padding: 28px clamp(18px, 4vw, 56px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+            font-size: 16px;
+        }
+
+        .header-brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid rgba(243, 199, 104, 0.45);
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn-nav {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: transform 0.22s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            color: #f4e9d8;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-nav:hover { transform: translateY(-2px); }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px clamp(18px, 4vw, 56px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-title {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .menu-title h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            color: #ffeccc;
+            text-shadow: 0 10px 26px rgba(0,0,0,0.4);
+        }
+
+        .menu-title p {
+            color: #d8b58a;
+            margin-top: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+
+        .menu-section {
+            background: linear-gradient(180deg, rgba(20, 20, 28, 0.6) 0%, rgba(12, 14, 20, 0.6) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(14px);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--gold);
+        }
+
+        .section-icon {
+            font-size: 28px;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin: 0;
+        }
+
+        .section-subtitle {
+            color: #a8a8a8;
+            font-size: 11px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .menu-item {
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .menu-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: #fff4dd;
+            font-size: 15px;
+            margin: 0 0 6px;
+        }
+
+        .item-desc {
+            color: #a0a0a0;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0 0 8px;
+        }
+
+        .item-prices {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .price-tag {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 6px 8px;
+            text-align: center;
+            color: #fff0cf;
+        }
+
+        .price-size {
+            display: block;
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 2px;
+        }
+
+        .price-amount {
+            display: block;
+            font-weight: 700;
+            color: #f3c768;
+        }
+
+        .add-ons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .add-on-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .add-on-name {
+            font-weight: 700;
+            color: #fff4dd;
+            font-size: 14px;
+            margin: 0 0 4px;
+        }
+
+        .add-on-price {
+            color: #d8b58a;
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .featured-section {
+            background: linear-gradient(135deg, rgba(243, 199, 104, 0.12) 0%, rgba(232, 183, 74, 0.08) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 48px;
+            text-align: center;
+        }
+
+        .featured-badge {
+            display: inline-block;
+            background: var(--gold);
+            color: #121212;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .coming-soon-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.12);
+            color: #d8b58a;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-left: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .featured-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 32px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin: 0 0 8px;
+        }
+
+        .featured-desc {
+            color: #e8d7c3;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 28px;
+            color: #888;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        @media (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-title h1 {
+                font-size: clamp(2rem, 6vw, 3.5rem);
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 14px;
+                text-align: center;
+            }
+
+            .header-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn-nav {
+                flex: 1;
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-brand">
+            <img src="images/bfc.jpg" alt="But First Coffee logo">
+            <span>BUT FIRST, COFFEE</span>
+        </div>
+        <nav class="header-nav">
+            <a href="index.html" class="btn-nav">Home</a>
+            <a href="cafe.html" class="btn-nav">Order</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="menu-title">
+            <h1>Our Menu</h1>
+            <p>Crafted coffee & quality food</p>
+        </div>
+
+        <!-- Coffee Section -->
+        <div class="menu-grid">
+            <!-- Classics -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">☕</span>
+                    <div>
+                        <h2 class="section-title">Classics</h2>
+                        <p class="section-subtitle">Timeless favorites</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Plain Coffee <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Simple, bold, and honest.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Small</span><span class="price-amount">₱80</span></div>
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱95</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱110</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Regular Brewed <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Our house blend with subtle sweetness.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Small</span><span class="price-amount">₱85</span></div>
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱100</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱120</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Lattes - Cold <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Smooth, creamy, and comforting.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Small</span><span class="price-amount">₱95</span></div>
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱110</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱130</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signatures -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">⭐</span>
+                    <div>
+                        <h2 class="section-title">Signatures</h2>
+                        <p class="section-subtitle">Our specialty</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Espresso</h3>
+                    <p class="item-desc">Rich, concentrated, and focused.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">1 Shot</span><span class="price-amount">₱42</span></div>
+                        <div class="price-tag"><span class="price-size">2 Shot</span><span class="price-amount">₱65</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Cappuccino</h3>
+                    <p class="item-desc">Balance of espresso and steamed milk.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱120</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱145</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Macchiato</h3>
+                    <p class="item-desc">Espresso "stained" with foam.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱110</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱130</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Latte</h3>
+                    <p class="item-desc">Smooth espresso with steamed milk.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱100</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱120</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Mocha</h3>
+                    <p class="item-desc">Rich espresso with chocolate and milk.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱105</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱125</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Americano</h3>
+                    <p class="item-desc">Espresso shots with hot water.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱90</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱110</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Iced Favorites -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">🧊</span>
+                    <div>
+                        <h2 class="section-title">Iced Favorites</h2>
+                        <p class="section-subtitle">Cool & refreshing</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Iced Latte <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Smooth espresso with cold milk.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱115</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱140</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Iced Americano <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Classic cold coffee drink.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Med</span><span class="price-amount">₱105</span></div>
+                        <div class="price-tag"><span class="price-size">Lrg</span><span class="price-amount">₱125</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Vietnamese Coffee <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Strong brew with condensed milk.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-size">Hot</span><span class="price-amount">₱110</span></div>
+                        <div class="price-tag"><span class="price-size">Iced</span><span class="price-amount">₱130</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add-Ons & Milk Substitutes -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">✨</span>
+                    <div>
+                        <h2 class="section-title">Customize</h2>
+                        <p class="section-subtitle">Add-ons & options</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <h4 style="color: #f3c768; font-size: 13px; margin: 0 0 8px; text-transform: uppercase;">Add-ons</h4>
+                    <div class="add-ons-grid">
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Condensed Milk</h4>
+                            <p class="add-on-price">+₱20</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Whipped Cream</h4>
+                            <p class="add-on-price">+₱30</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Hazelnut Syrup <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱25</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Vanilla Syrup <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱25</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="color: #f3c768; font-size: 13px; margin: 14px 0 8px; text-transform: uppercase;">Milk Substitutes</h4>
+                    <div class="add-ons-grid">
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Almond Milk <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱15</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Oat Milk <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱15</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Coconut Milk <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱12</p>
+                        </div>
+                        <div class="add-on-item">
+                            <h4 class="add-on-name">Soy Milk <span class="coming-soon-badge">Coming Soon</span></h4>
+                            <p class="add-on-price">+₱12</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Food Section -->
+        <div class="featured-section" style="margin-top: 48px;">
+            <span class="featured-badge">Food Menu</span>
+            <h2 class="featured-title">Pair Your Drink</h2>
+            <p class="featured-desc">From fresh pastries to hearty mains, every item is crafted to complement your coffee experience.</p>
+        </div>
+
+        <div class="menu-grid">
+            <!-- Breakfast -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">🥐</span>
+                    <div>
+                        <h2 class="section-title">Breakfast & Pastries</h2>
+                        <p class="section-subtitle">Fresh pastries & morning fare</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Malunggay Pandesal</h3>
+                    <p class="item-desc">Nutritious pandesal with malunggay (moringa).</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱5</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Egg Bread</h3>
+                    <p class="item-desc">Soft bread with sweet egg custard filling.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱5</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Pan de Coco</h3>
+                    <p class="item-desc">Fluffy roll with sweetened coconut filling.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱5</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Choco/Vanilla Bavarian</h3>
+                    <p class="item-desc">Bavarian with chocolate or vanilla custard.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱10</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Pandesal Basket <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Fresh, warm pandesal straight from the oven.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱45</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Kimchi Fried Rice <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Spicy, savory, and satisfying with a choice of protein.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱180</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Chicken Teriyaki Rice Bowl <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Tender chicken glazed in rich teriyaki sauce.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱200</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Waffle Breakfast <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Golden waffle with scrambled eggs and bacon.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱160</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pasta -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">🍝</span>
+                    <div>
+                        <h2 class="section-title">Pasta</h2>
+                        <p class="section-subtitle">Handcrafted</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Shrimp Aglio Olio <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Garlic and oil pasta with tender shrimp.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱185</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Chicken Alfredo <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Creamy Alfredo with succulent chicken pieces.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱175</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Penne Bolognese <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Classic meat sauce with penne pasta.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱165</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Carbonara <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Traditional carbonara with bacon and egg.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱170</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Snacks -->
+            <div class="menu-section">
+                <div class="section-header">
+                    <span class="section-icon">🍟</span>
+                    <div>
+                        <h2 class="section-title">Snacks</h2>
+                        <p class="section-subtitle">Light bites</p>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Waffle <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Crispy on the outside, fluffy inside.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱80</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Fries <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Crispy fries with garlic parmasan powder.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱90</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Potato Platter <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Fries and potato wedges combo with seasoning.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱140</span></div>
+                    </div>
+                </div>
+
+                <div class="menu-item">
+                    <h3 class="item-name">Cheeseburger Bowl <span class="coming-soon-badge">Coming Soon</span></h3>
+                    <p class="item-desc">Loaded with beef, cheese, and all the fixings.</p>
+                    <div class="item-prices">
+                        <div class="price-tag"><span class="price-amount">₱160</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Open daily • 6AM - 10PM • Orders available at cafe.html
+    </div>
+
+    <script>
+        // Smooth scroll and animations
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

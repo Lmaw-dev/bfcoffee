@@ -1,0 +1,618 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>But first, Coffee</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 0 0 14px;
+            flex-shrink: 0;
+            justify-content: flex-start;
+        }
+        .cat-tab {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            color: #d6d6d6;
+            font-family: 'Poppins', sans-serif;
+        }
+        .cat-tab:hover, .cat-tab.active {
+            background: linear-gradient(180deg, #d7d7d7 0%, #9d9d9d 100%);
+            color: #121212;
+            border-color: #f3f3f3;
+        }
+        .admin-btn {
+            background: #1f1f1f;
+            color: #f5f5f5;
+            border: 1px solid #5b5b5b;
+            border-radius: 4px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .admin-btn:hover { background: #323232; }
+        /* Receipt modal */
+        .receipt-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .receipt-overlay.open { display: flex; }
+        .receipt-box {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 28px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+        .receipt-box h3 { color: #667eea; font-size: 22px; margin-bottom: 6px; }
+        .receipt-box p { color: #555; margin: 4px 0; }
+        .receipt-divider { border: none; border-top: 1px dashed #ccc; margin: 14px 0; }
+        .receipt-items { text-align: left; font-size: 14px; }
+        .receipt-item-row { display: flex; justify-content: space-between; margin: 4px 0; color: #444; }
+        .receipt-total { font-weight: 700; font-size: 16px; color: #333 !important; }
+        .receipt-btn {
+            margin-top: 20px;
+            background: #667eea;
+            color: white;   
+            border: none;
+            border-radius: 25px;
+            padding: 12px 32px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+        }
+        .receipt-btn:hover { background: #5a6dd8; }
+
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.62);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .dialog-overlay.open { display: flex; }
+
+        .dialog-box {
+            width: min(420px, 94vw);
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .dialog-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dialog-head h4 {
+            margin: 0;
+            font-size: 18px;
+            color: #111827;
+        }
+
+        .dialog-close {
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .dialog-content {
+            padding: 16px;
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 16px 16px;
+        }
+
+        .dialog-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .dialog-btn.cancel { background: #e5e7eb; color: #111827; }
+        .dialog-btn.ok { background: #667eea; color: #fff; }
+        .dialog-btn.ok.danger { background: #b91c1c; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas1"></canvas>
+    <div class="container">
+        <!-- Menu Pane -->
+        <div class="menu-pane">
+            <div class="menu-header">
+                
+                <div class="image-area" aria-hidden="true">
+                    <img src="images/bfc.jpg" width="190" height="210" alt="But First Coffee logo">
+                </div>
+                <h1>Menu</h1>
+                <p class="menu-subtitle">But first, Coffee</p>
+                
+            </div>
+            <div class="category-tabs" id="categoryTabs"></div>
+            <div class="menu-scroll">
+                <div id="menuContainer"></div>
+            </div>
+        </div>
+
+        <!-- Order Panel -->
+        <div class="order-section">
+            <div class="order-header">
+                <h2><strong>Your Order</strong></h2>
+                <a href="cafe-admin.php" class="admin-btn">&#9881; Admin</a>
+            </div>
+            <div class="order-container">
+                <div class="order-items" id="orderItems">
+                    <p class="empty-order">No items yet. Click "Add to Order" to start!</p>
+                </div>
+
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span>Total Items:</span>
+                        <span id="totalItems">0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Price:</span>
+                        <span id="totalPrice">&#8369; 0.00</span>
+                    </div>
+                </div>
+
+                <div class="payment-section">
+                    <h3>Payment</h3>
+                    <div class="payment-input">
+                        <label for="amountPaid">Amount Paid (&#8369;):</label>
+                        <input type="number" id="amountPaid" placeholder="Enter amount" min="0" step="0.01">
+                    </div>
+                    <button class="calculate-btn" onclick="calculateChange()">Calculate Change</button>
+                    <div class="change-display" id="changeDisplay"></div>
+                </div>
+
+                <div class="order-actions">
+                    <button class="clear-btn" onclick="clearOrder()">Clear Order</button>
+                    <button class="checkout-btn" onclick="checkout()">Complete Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="receipt-overlay" id="receiptOverlay">
+        <div class="receipt-box">
+            <h3>&#x2615; But first, Coffee</h3>
+            <p id="receiptDate"></p>
+            <hr class="receipt-divider">
+            <div class="receipt-items" id="receiptItems"></div>
+            <hr class="receipt-divider">
+            <div class="receipt-items">
+                <div class="receipt-item-row receipt-total">
+                    <span>Total:</span><span id="receiptTotal"></span>
+                </div>
+                <div class="receipt-item-row">
+                    <span>Amount Paid:</span><span id="receiptPaid"></span>
+                </div>
+                <div class="receipt-item-row">
+                    <span>Change:</span><span id="receiptChange"></span>
+                </div>
+            </div>
+            <hr class="receipt-divider">
+            <p style="font-size:13px;color:#888;">Thank you for your order!</p>
+            <button class="receipt-btn" onclick="closeReceipt()">Done</button>
+        </div>
+    </div>
+
+    <!-- Message Dialog -->
+    <div class="dialog-overlay" id="messageDialog">
+        <div class="dialog-box">
+            <div class="dialog-head">
+                <h4 id="dialogTitle">Message</h4>
+                <button type="button" class="dialog-close" id="dialogClose">&times;</button>
+            </div>
+            <div class="dialog-content" id="dialogMessage"></div>
+            <div class="dialog-actions">
+                <button type="button" class="dialog-btn cancel" id="dialogCancel">Cancel</button>
+                <button type="button" class="dialog-btn ok" id="dialogConfirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script async type='module' src='https://interfaces.zapier.com/assets/web-components/zapier-interfaces/zapier-interfaces.esm.js'></script>
+<zapier-interfaces-chatbot-embed is-popup='true' chatbot-id='cmmu94j4j00qcwtxeiae9nlks'></zapier-interfaces-chatbot-embed>
+
+    <script>
+        /* -- Default data -- */
+        let dialogResolver = null;
+
+        function openDialog({ title, message, confirmText = 'OK', cancelText = '', danger = false }) {
+            const overlay = document.getElementById('messageDialog');
+            const titleEl = document.getElementById('dialogTitle');
+            const msgEl = document.getElementById('dialogMessage');
+            const confirmBtn = document.getElementById('dialogConfirm');
+            const cancelBtn = document.getElementById('dialogCancel');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            confirmBtn.textContent = confirmText;
+            cancelBtn.textContent = cancelText || 'Cancel';
+            cancelBtn.style.display = cancelText ? 'inline-block' : 'none';
+            confirmBtn.classList.toggle('danger', danger);
+
+            overlay.classList.add('open');
+            return new Promise((resolve) => {
+                dialogResolver = resolve;
+            });
+        }
+
+        function closeDialog(result) {
+            document.getElementById('messageDialog').classList.remove('open');
+            if (dialogResolver) {
+                dialogResolver(result);
+                dialogResolver = null;
+            }
+        }
+
+        async function showInfo(title, message) {
+            await openDialog({ title, message, confirmText: 'OK' });
+        }
+
+        async function showConfirm(title, message, confirmText = 'Confirm', danger = false) {
+            return openDialog({ title, message, confirmText, cancelText: 'Cancel', danger });
+        }
+
+        const DEFAULT_PRODUCTS = [
+            { id:1,  name:"Espresso",              category:"Coffees",  price:42.00, image:"images/espresso.jpg",   available:true },
+            { id:2,  name:"Americano",              category:"Coffees",  price:52.50, image:"images/americano.jpg",  available:true },
+            { id:3,  name:"Cappuccino",             category:"Coffees",  price:43.00, image:"images/cappuccino.jpg", available:true },
+            { id:4,  name:"Latte",                  category:"Coffees",  price:33.50, image:"images/latte.jpg",      available:true },
+            { id:5,  name:"Mocha",                  category:"Coffees",  price:34.00, image:"images/mocha.jpg",      available:true },
+            { id:6,  name:"Macchiato",              category:"Coffees",  price:32.75, image:"images/macchiato.jpg",  available:true },
+            { id:7,  name:"Malunggay Pandesal",     category:"Pastries", price:5.00,  image:"images/pandesal.jpg",   available:true },
+            { id:8,  name:"Egg Bread",              category:"Pastries", price:5.00,  image:"images/egg.jpg",        available:true },
+            { id:9,  name:"Pan de Coco",            category:"Pastries", price:5.00,  image:"images/coco.jpg",       available:true },
+            { id:10, name:"Choco/Vanilla Bavarian", category:"Pastries", price:10.00, image:"images/bavarian.jpg",   available:true }
+        ];
+
+        let cachedProducts = [];
+
+        async function loadProductsFromServer() {
+            try {
+                const response = await fetch('store-api.php?action=get_products');
+                if (!response.ok) throw new Error('Failed to fetch products');
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    cachedProducts = data;
+                    return;
+                }
+            } catch (err) {
+                console.warn('Using local fallback products:', err.message);
+            }
+
+            const raw = localStorage.getItem('bfc_products');
+            cachedProducts = raw ? JSON.parse(raw) : DEFAULT_PRODUCTS;
+        }
+
+        function getProducts() {
+            return cachedProducts;
+        }
+        function saveOrderRecord(order) {
+            const orders = JSON.parse(localStorage.getItem('bfc_orders') || '[]');
+            orders.unshift(order);
+            if (orders.length > 200) orders.length = 200;
+            localStorage.setItem('bfc_orders', JSON.stringify(orders));
+        }
+
+        async function saveOrderToServer(order) {
+            const payload = {
+                items: order.items,
+                total: order.total,
+                paid: order.paid,
+                change_amount: order.change
+            };
+
+            const response = await fetch('store-api.php?action=add_order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to save order');
+            }
+
+            return response.json();
+        }
+
+        /* â”€â”€ Menu rendering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        let activeCategory = 'All';
+
+        function renderMenu() {
+            const products = getProducts().filter(p => p.available);
+            const categories = ['All', ...new Set(products.map(p => p.category))];
+
+            // Category tabs
+            document.getElementById('categoryTabs').innerHTML = categories.map(cat =>
+                `<button class="cat-tab${cat === activeCategory ? ' active' : ''}" onclick="setCategory('${cat}')">${cat}</button>`
+            ).join('');
+
+            // Filter & group
+            const shown = activeCategory === 'All' ? products : products.filter(p => p.category === activeCategory);
+            const grouped = {};
+            shown.forEach(p => { (grouped[p.category] = grouped[p.category] || []).push(p); });
+
+            const container = document.getElementById('menuContainer');
+            if (!Object.keys(grouped).length) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">No items available right now.</p>';
+                return;
+            }
+            container.innerHTML = Object.entries(grouped).map(([cat, items]) => `
+                <div class="menu-section">
+                    <h3>${cat}</h3>
+                    <div class="menu-grid" role="list">
+                        ${items.map(p => `
+                            <div class="menu-card" data-id="${p.id}" role="listitem">
+                                <img src="${p.image}" alt="${p.name}" class="item-image" onerror="this.src='images/bfc.jpg'">
+                                <div class="item-copy">
+                                    <h4 class="item-name">${p.name}</h4>
+                                    <p class="item-desc">Freshly prepared in-house, served hot and made to order.</p>
+                                </div>
+                                <div class="item-actions">
+                                    <p class="item-price">&#8369;${p.price.toFixed(2)}</p>
+                                    <button class="order-btn" onclick="addToOrder(${p.id})">Add</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setCategory(cat) { activeCategory = cat; renderMenu(); }
+
+        /* â”€â”€ Order logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        let orderItems = [];
+
+        function addToOrder(productId) {
+            const product = getProducts().find(p => p.id === productId);
+            if (!product) return;
+            const existing = orderItems.find(i => i.id === productId);
+            if (existing) { existing.quantity++; } 
+            else { orderItems.push({ id: product.id, name: product.name, price: product.price, quantity: 1 }); }
+            updateOrderDisplay();
+            // Flash the card
+            const card = document.querySelector(`.menu-card[data-id="${productId}"]`);
+            if (card) { card.style.outline = '3px solid #667eea'; setTimeout(() => card.style.outline = '', 400); }
+        }
+
+        function increaseQuantity(i) { orderItems[i].quantity++; updateOrderDisplay(); }
+        function decreaseQuantity(i) {
+            if (orderItems[i].quantity > 1) orderItems[i].quantity--;
+            else orderItems.splice(i, 1);
+            updateOrderDisplay();
+        }
+        function removeItem(i) { orderItems.splice(i, 1); updateOrderDisplay(); }
+
+        function updateOrderDisplay() {
+            const el = document.getElementById('orderItems');
+            el.innerHTML = orderItems.length
+                ? orderItems.map((item, i) => `
+                    <div class="order-item">
+                        <div class="item-info">
+                            <span class="item-name-order">${item.name}</span>
+                            <span class="item-price-order">&#8369;${item.price.toFixed(2)}</span>
+                        </div>
+                        <div class="quantity-controls">
+                            <button onclick="decreaseQuantity(${i})">&#8722;</button>
+                            <span class="quantity">${item.quantity}</span>
+                            <button onclick="increaseQuantity(${i})">&#43;</button>
+                            <button class="remove-btn" onclick="removeItem(${i})">&#x2715;</button>
+                        </div>
+                        <div class="item-total">&#8369;${(item.price * item.quantity).toFixed(2)}</div>
+                    </div>
+                `).join('')
+                : '<p class="empty-order">No items yet. Click "Add to Order" to start!</p>';
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const totalQty   = orderItems.reduce((s, i) => s + i.quantity, 0);
+            const totalPrice = orderItems.reduce((s, i) => s + i.price * i.quantity, 0);
+            document.getElementById('totalItems').textContent = totalQty;
+            document.getElementById('totalPrice').textContent = `₱ ${totalPrice.toFixed(2)}`;
+        }
+
+        function calculateChange() {
+            const total  = orderItems.reduce((s, i) => s + i.price * i.quantity, 0);
+            const paid   = parseFloat(document.getElementById('amountPaid').value) || 0;
+            const change = paid - total;
+            const el     = document.getElementById('changeDisplay');
+            if (!orderItems.length)  { el.innerHTML = '<p class="error">Please add items first!</p>'; return; }
+            if (!paid)               { el.innerHTML = '<p class="error">Please enter amount paid!</p>'; return; }
+            if (change < 0)          { el.innerHTML = `<p class="error">Need &#8369;${Math.abs(change).toFixed(2)} more!</p>`; return; }
+            el.innerHTML = `<p class="success">Change: &#8369;${change.toFixed(2)}</p>`;
+        }
+
+        function clearOrder() {
+            if (!orderItems.length) return;
+            showConfirm('Clear Order', 'Clear all items from your order?', 'Clear', true).then((confirmed) => {
+                if (!confirmed) return;
+                orderItems = [];
+                document.getElementById('amountPaid').value = '';
+                document.getElementById('changeDisplay').innerHTML = '';
+                updateOrderDisplay();
+            });
+        }
+
+        async function checkout() {
+            if (!orderItems.length) { await showInfo('Empty Order', 'Your order is empty.'); return; }
+            const total = orderItems.reduce((s, i) => s + i.price * i.quantity, 0);
+            const paid  = parseFloat(document.getElementById('amountPaid').value) || 0;
+            if (paid < total) { await showInfo('Payment Needed', 'Please enter a valid payment amount.'); return; }
+            const order = { id: Date.now(), items: [...orderItems], total, paid, change: paid - total,
+                            timestamp: new Date().toLocaleString('en-PH') };
+
+            try {
+                await saveOrderToServer(order);
+            } catch (err) {
+                await showInfo('Save Failed', 'Order could not be saved to database: ' + err.message);
+                return;
+            }
+
+            saveOrderRecord(order);
+            showReceipt(order);
+        }
+
+        function showReceipt(order) {
+            document.getElementById('receiptDate').textContent = order.timestamp;
+            document.getElementById('receiptItems').innerHTML = order.items.map(i =>
+                `<div class="receipt-item-row"><span>${i.name} &times;${i.quantity}</span><span>&#8369;${(i.price*i.quantity).toFixed(2)}</span></div>`
+            ).join('');
+            document.getElementById('receiptTotal').textContent  = `₱${order.total.toFixed(2)}`;
+            document.getElementById('receiptPaid').textContent   = `₱${order.paid.toFixed(2)}`;
+            document.getElementById('receiptChange').textContent = `₱${order.change.toFixed(2)}`;
+            document.getElementById('receiptOverlay').classList.add('open');
+        }
+
+        function closeReceipt() {
+            document.getElementById('receiptOverlay').classList.remove('open');
+            orderItems = [];
+            document.getElementById('amountPaid').value = '';
+            document.getElementById('changeDisplay').innerHTML = '';
+            updateOrderDisplay();
+        }
+
+        document.getElementById('dialogConfirm').addEventListener('click', () => closeDialog(true));
+        document.getElementById('dialogCancel').addEventListener('click', () => closeDialog(false));
+        document.getElementById('dialogClose').addEventListener('click', () => closeDialog(false));
+        document.getElementById('messageDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'messageDialog') closeDialog(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('messageDialog').classList.contains('open')) {
+                closeDialog(false);
+            }
+        });
+
+        /* â”€â”€ Particle background â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        const canvas = document.getElementById('canvas1');
+        const ctx    = canvas.getContext('2d');
+        let particlesArray = [];
+
+        function resizeCanvas() {
+            canvas.width  = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        }
+
+        class Particle {
+            constructor() {
+                this.size       = (Math.random() * 2.5) + 1;
+                this.x          = (Math.random() * (innerWidth  - this.size * 2)) + this.size;
+                this.y          = (Math.random() * (innerHeight - this.size * 2)) + this.size;
+                this.directionX = (Math.random() * 1.5) - 0.75;
+                this.directionY = (Math.random() * 1.5) - 0.75;
+                this.color      = '#8ea0b3';
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width  || this.x < 0) this.directionX *= -1;
+                if (this.y > canvas.height || this.y < 0) this.directionY *= -1;
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            const n = (canvas.height * canvas.width) / 10000;
+            for (let i = 0; i < n; i++) particlesArray.push(new Particle());
+        }
+
+        function connectParticles() {
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a + 1; b < particlesArray.length; b++) {
+                    const dx   = particlesArray[a].x - particlesArray[b].x;
+                    const dy   = particlesArray[a].y - particlesArray[b].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.strokeStyle = `rgba(142,160,179,${1 - dist / 120})`;
+                        ctx.lineWidth   = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach(p => p.update());
+            connectParticles();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animateParticles();
+
+        /* â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+        loadProductsFromServer().then(() => {
+            renderMenu();
+        });
+
+    </script>
+</body>
+</html>

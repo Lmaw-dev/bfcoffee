@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: bfc-backend
+    env: docker
+    dockerfilePath: deploy/render/Dockerfile
+    plan: starter # choose appropriate plan
+    envVars:
+      - key: DB_HOST
+        fromDatabase: false
+      - key: DB_USER
+        fromDatabase: false
+      - key: DB_PASS
+        fromDatabase: false
+      - key: DB_NAME
+        fromDatabase: false
+      - key: VIRTUAL_HOST
+        fromDatabase: false
