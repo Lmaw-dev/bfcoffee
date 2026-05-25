@@ -25,16 +25,16 @@ git branch -M main
 git push -u origin main
 ```
 
-2) Backend — Render
+2) Backend — Render Blueprint (must use the root `render.yaml`)
 
-A. Ensure `deploy/render/Dockerfile` and `deploy/render/render.yaml` are in your repo (already added).
+A. Ensure the root `Dockerfile` and root `render.yaml` are in your repo (already added).
 
 B. Create a MySQL database (managed) and note host, port, user, password and database name.
    - You can use DigitalOcean Managed MySQL or another provider. Create database `web_system` and a user `jireh` with password `faith` (or use stronger password and update the steps accordingly).
 
 C. On Render:
-   1. New → Web Service → Connect to your GitHub repo.
-   2. Render will detect `render.yaml` and create `bfc-backend` service (docker).
+   1. New → Blueprint → Connect to your GitHub repo.
+   2. Render will detect the root-level `render.yaml` and create `bfc-backend` service (docker).
    3. Set Environment variables in the Service Settings:
       - `DB_HOST` = your managed DB host
       - `DB_USER` = jireh
@@ -55,15 +55,15 @@ E. Verify API endpoints:
 curl "https://bfc-backend.onrender.com/store-api.php?action=get_products"
 ```
 
-3) Frontend — Vercel
+3) Frontend — Vercel (must point to the repo root that contains `react-app`)
 
 A. On GitHub, ensure `react-app` is included in the repo.
 B. On Vercel dashboard: New Project → Import Git Repository → choose your repo.
 C. Configure:
-   - Root Directory: `react-app` (or you can deploy from repo root if using workspaces)
-   - Framework: Vite
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
+   - Root Directory: leave blank unless your GitHub repo actually contains a top-level `react-app` folder.
+   - If the root directory setting shows `react-app does not exist`, remove the Root Directory value and use the repo root instead.
+   - If deploying from the repo root, set Build Command to `cd react-app && npm ci && npm run build`.
+   - Output Directory: `react-app/dist` if you build from the repo root, otherwise `dist` if Root Directory is `react-app`.
 D. Environment Variables (Vercel project settings):
    - `VITE_PHP_API_BASE` = `https://bfc-backend.onrender.com` (replace with your Render URL)
 E. Deploy. Vercel will build and host the frontend; it will provide a public URL with HTTPS.
