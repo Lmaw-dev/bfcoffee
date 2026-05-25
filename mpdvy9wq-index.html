@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>But First, Coffee</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #111111;
+            --paper: #f8f2e6;
+            --gold: #f3c768;
+            --coffee: #704129;
+            --latte: #d8b58a;
+            --char: #1a1a1f;
+            --glow: 0 24px 44px rgba(0, 0, 0, 0.28);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: radial-gradient(circle at 85% 5%, rgba(243, 199, 104, 0.18), transparent 38%), linear-gradient(155deg, #0f1014 0%, #15161c 48%, #111111 100%);
+            color: #f8f4ec;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .grain {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.08;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.9) 1px, transparent 1px);
+            background-size: 3px 3px;
+            z-index: 1;
+        }
+
+        .bg-chevron {
+            position: fixed;
+            left: 58%;
+            top: 18%;
+            transform: translate(-50%, -50%);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(180px, 24vw, 420px);
+            line-height: 0.85;
+            color: rgba(243, 199, 104, 0.24);
+            text-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            z-index: 2;
+            padding: 28px clamp(18px, 4vw, 56px) 50px;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            letter-spacing: 0.7px;
+        }
+
+        .brand img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid rgba(243, 199, 104, 0.45);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn.dark {
+            color: #f4e9d8;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn.gold {
+            color: #1f1913;
+            background: linear-gradient(120deg, #f3c768 0%, #ffe3ad 100%);
+            box-shadow: 0 10px 22px rgba(243, 199, 104, 0.35);
+        }
+
+        .btn:hover { transform: translateY(-2px); }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            justify-items: center;
+            align-items: center;
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .kicker {
+            display: inline-block;
+            color: var(--gold);
+            letter-spacing: 2.4px;
+            text-transform: uppercase;
+            font-weight: 700;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .headline {
+            margin: 0;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(3rem, 11vw, 8rem);
+            letter-spacing: 1.5px;
+            line-height: 0.95;
+            text-transform: uppercase;
+            color: #ffeccc;
+            text-shadow: 0 10px 26px rgba(0,0,0,0.4);
+        }
+
+        .sub {
+            margin: 0;
+            color: #fff4dd;
+            max-width: 760px;
+            font-size: clamp(14px, 2vw, 18px);
+            line-height: 1.55;
+            text-align: center;
+            background: rgba(8, 10, 16, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 14px 18px;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+            position: relative;
+            z-index: 4;
+        }
+
+        .visual {
+            position: relative;
+            min-height: 640px;
+            display: grid;
+            place-items: center;
+            padding-top: 0;
+        }
+
+        .cup-stack {
+            position: relative;
+            width: min(1100px, 94vw);
+            height: 640px;
+            overflow: visible;
+        }
+
+        .cup {
+            position: absolute;
+            width: 52%;
+            max-width: 380px;
+            filter: drop-shadow(0 24px 26px rgba(0,0,0,0.35));
+            border-radius: 16px;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            animation: none;
+        }
+
+        .cup.left { left: 2%; bottom: 20px; animation-delay: 0.15s; }
+        .cup.center { left: 0; top: 0; width: 100%; max-width: 1100px; z-index: 3; }
+        .cup.right { right: 2%; bottom: 20px; animation-delay: 0.46s; }
+
+        .shape {
+            position: absolute;
+            inset: auto -12% -5% -12%;
+            height: 170px;
+            background: linear-gradient(120deg, #f3c768 0%, #efcf8f 52%, #e8b74a 100%);
+            clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 100%);
+            z-index: -1;
+            filter: drop-shadow(0 -10px 24px rgba(243, 199, 104, 0.22));
+        }
+
+        .story {
+            margin: 10px auto 0;
+            width: min(1150px, 100%);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: var(--glow);
+            transform: translateY(18px);
+            opacity: 0;
+            animation: fadeUp 0.8s forwards;
+        }
+
+        .panel:nth-child(2) { animation-delay: 0.15s; }
+
+        .panel img {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .panel-copy {
+            padding: 20px;
+        }
+
+        .panel-copy h3 {
+            margin: 0;
+            font-size: 22px;
+            color: #ffe8bf;
+        }
+
+        .panel-copy p {
+            margin: 10px 0 0;
+            color: #eadfcf;
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .footer-note {
+            margin-top: 26px;
+            text-align: center;
+            color: #cabca2;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            opacity: 0.92;
+        }
+
+        @keyframes rise {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 980px) {
+            .visual { min-height: 540px; }
+            .cup-stack { width: min(860px, 96vw); height: 520px; }
+            .cup.center { left: 0; top: 8px; width: 100%; max-width: 760px; }
+            .story { grid-template-columns: 1fr; }
+            .bg-chevron { left: 52%; top: 16%; font-size: clamp(160px, 36vw, 300px); }
+        }
+
+        @media (max-width: 640px) {
+            .nav { align-items: flex-start; flex-direction: column; }
+            .cup.left, .cup.right { width: 42%; }
+            .visual { min-height: 340px; }
+            .cup-stack { width: min(560px, 98vw); height: 330px; }
+            .cup.center { width: 100%; left: 0; top: 12px; max-width: 520px; }
+            .sub { font-size: 15px; padding: 12px 14px; }
+            .panel img { height: 240px; }
+            .hero { padding-bottom: 30px; }
+            .bg-chevron { left: 50%; top: 14%; font-size: clamp(130px, 44vw, 220px); color: rgba(243, 199, 104, 0.18); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-chevron" aria-hidden="true">&gt;</div>
+    <div class="grain"></div>
+
+    <section class="hero">
+        <nav class="nav">
+            <div class="brand">
+                <img src="images/bfc.jpg" alt="But First Coffee logo">
+                <span>BUT FIRST, COFFEE</span>
+            </div>
+            <div class="nav-actions">
+                <a class="btn dark" href="log-in.html">Admin Login</a>
+                <a class="btn gold" href="cafe.html">Order Now</a>
+            </div>
+        </nav>
+
+        <div class="hero-content">
+            <div class="visual">
+                <div class="cup-stack">
+                    <img class="cup center" src="images/landing-cups.png" alt="Signature center cup" onerror="this.onerror=null;this.src='images/bc.png';">
+                    <div class="shape"></div>
+                </div>
+            </div>
+
+            <p class="sub">From iced classics to warm bakery favorites, every cup is made to keep your momentum going. Step in, slow down, and sip something worth remembering.</p>
+        </div>
+
+        <section class="story">
+            <article class="panel">
+                <img src="images/landing-interior.jpg" alt="But First Coffee interior" onerror="this.onerror=null;this.src='images/bfc1.jpg';">
+                <div class="panel-copy">
+                    <h3>Signature Experience</h3>
+                    <p>Designed for students, workers, and early risers. Quick service, rich coffee aromas, and a warm brand personality in every visit.</p>
+                </div>
+            </article>
+            <article class="panel">
+                <img src="images/pandesal.jpg" alt="Fresh bakery item">
+                <div class="panel-copy">
+                    <h3>Pair It Perfectly</h3>
+                    <p>Pair your drink with fresh breads and pastries. Build your own comfort combo in minutes from menu to checkout.</p>
+                </div>
+            </article>
+        </section>
+
+        <p class="footer-note">Open daily • Crafted in web_system powered admin</p>
+    </section>
+
+    <script>
+        const cups = document.querySelectorAll('.cup');
+        window.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 14;
+            const y = (e.clientY / window.innerHeight - 0.5) * 10;
+            cups.forEach((cup, i) => {
+                const factor = i === 1 ? 1.4 : 1;
+                cup.style.transform = `translate(${x * factor}px, ${y * factor}px)`;
+            });
+        });
+    </script>
+</body>
+</html>

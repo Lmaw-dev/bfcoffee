@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin / Staff Login | But First, Coffee</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at 20% 20%, rgba(243, 199, 104, 0.18), transparent 32%), linear-gradient(145deg, #0f1014 0%, #13151c 55%, #161616 100%);
+            color: #f8f4ec;
+            padding: 20px;
+        }
+        .card {
+            width: min(420px, 96vw);
+            background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 18px;
+            box-shadow: 0 22px 44px rgba(0,0,0,0.35);
+            padding: 28px 24px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+        .brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(243,199,104,0.45);
+        }
+        h1 {
+            margin: 0;
+            font-size: 29px;
+        }
+        p {
+            margin: 8px 0 20px;
+            color: #dfd2bc;
+            font-size: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #ecdcbf;
+        }
+        input {
+            width: 100%;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            padding: 11px 12px;
+            font-size: 14px;
+            background: rgba(0,0,0,0.18);
+            color: #fff;
+        }
+        input:focus {
+            outline: none;
+            border-color: #f3c768;
+        }
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 14px;
+            background: linear-gradient(120deg, #f3c768 0%, #ffe3ad 100%);
+            color: #1e160a;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+        .row {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .error-banner {
+            margin: 0 0 14px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(209, 74, 74, 0.2);
+            border: 1px solid rgba(255, 120, 120, 0.5);
+            color: #ffdede;
+            font-size: 13px;
+            display: none;
+        }
+        .link {
+            color: #f5dca8;
+            font-size: 13px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="brand">
+            <img src="images/bfc.jpg" alt="But First Coffee logo">
+            <span>BUT FIRST, COFFEE</span>
+        </div>
+        <h1>Admin / Staff Login</h1>
+        <p>Use admin email or staff username from the database.</p>
+
+        <div id="loginError" class="error-banner"></div>
+
+        <form action="log-in.php" method="POST">
+            <label for="login_id">Admin Email or Staff Username</label>
+            <input id="login_id" type="text" name="login_id" placeholder="admin@gmail.com or staff username" required>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" placeholder="Enter password" required>
+
+            <button class="btn" type="submit">Log In</button>
+        </form>
+
+        <div class="row">
+            <a class="link" href="index.html">Back to Landing</a>
+            <a class="link" href="cafe.html">Go to Menu</a>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const errorMessage = params.get('error');
+        if (errorMessage) {
+            const box = document.getElementById('loginError');
+            box.textContent = decodeURIComponent(errorMessage);
+            box.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

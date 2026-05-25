@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — But first, Coffee</title>
+    <link rel="stylesheet" href="cafe-admin.css">
+</head>
+<body>
+<canvas id="canvas1"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- Admin Dashboard -->
+<div id="adminDash" class="admin-wrap">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <img class="brand-logo" src="images/bfc.jpg" alt="But First Coffee logo" width="28" height="28">
+            <div class="brand-text">
+                <span class="brand-name">BFC Admin</span>
+                
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)">
+                <span class="nav-icon">&#x1F4CA;</span> Dashboard
+            </button>
+            <button class="nav-item" data-tab="products" onclick="switchTab('products',this)">
+                <span class="nav-icon">&#x1F7E4;</span> Products
+            </button>
+            <button class="nav-item" data-tab="orders" onclick="switchTab('orders',this)">
+                <span class="nav-icon">&#x1F4CB;</span> Orders
+            </button>
+            <button class="nav-item" data-tab="staff" onclick="switchTab('staff',this)">
+                <span class="nav-icon">&#x1F465;</span> Staff
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <span id="loggedInAs" class="logged-as"></span>
+            <a class="btn-logout" href="admin.php?logout=1">Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Dashboard Tab -->
+        <section id="tab-dashboard" class="tab-section active">
+            <h1>Dashboard</h1>
+            <div class="stats-grid" id="statsGrid"></div>
+            <h2>Recent Orders</h2>
+            <div class="table-wrap">
+                <table id="recentOrdersTable">
+                    <thead>
+                        <tr><th>#</th><th>Date</th><th>Items</th><th>Total</th></tr>
+                    </thead>
+                    <tbody id="recentOrdersBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Products Tab -->
+        <section id="tab-products" class="tab-section">
+            <div class="section-header">
+                <h1>Products</h1>
+                <button class="btn-primary" onclick="openProductModal()">&#43; Add Product</button>
+            </div>
+            <div class="table-wrap">
+                <table id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Orders Tab -->
+        <section id="tab-orders" class="tab-section">
+            <div class="section-header">
+                <h1>Order History</h1>
+                <button class="btn-danger" onclick="clearOrders()">&#x1F5D1; Clear History</button>
+            </div>
+            <div class="table-wrap">
+                <table id="ordersTable">
+                    <thead>
+                        <tr><th>#</th><th>Date &amp; Time</th><th>Items</th><th>Total</th><th>Paid</th><th>Change</th></tr>
+                    </thead>
+                    <tbody id="ordersBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Staff Tab -->
+        <section id="tab-staff" class="tab-section">
+            <div class="section-header">
+                <h1>Staff Management</h1>
+                <button class="btn-primary" onclick="openStaffModal()">&#43; Add Staff</button>
+            </div>
+            <div class="table-wrap">
+                <table id="staffTable">
+                    <thead>
+                        <tr><th>Name</th><th>Role</th><th>Username</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="staffBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="productModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="productModalTitle">Add Product</h3>
+            <button class="modal-close" onclick="closeProductModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="productId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Product Name *</label>
+                    <input type="text" id="productName" placeholder="e.g. Caramel Latte">
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <input type="text" id="productCategory" placeholder="e.g. Coffees" list="categoryList">
+                    <datalist id="categoryList"></datalist>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Price (&#8369;) *</label>
+                    <input type="number" id="productPrice" placeholder="0.00" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="productImage" placeholder="images/filename.jpg">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="productAvailable" checked>
+                    Available for order
+                </label>
+            </div>
+            <div id="productError" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeProductModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveProduct()">Save Product</button>
+        </div>
+    </div>
+</div>
+
+<!-- Staff Modal -->
+<div class="modal-overlay" id="staffModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="staffModalTitle">Add Staff</h3>
+            <button class="modal-close" onclick="closeStaffModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="staffId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="staffName" placeholder="e.g. Maria Santos">
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select id="staffRole">
+                        <option value="">Select role</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Barista">Barista</option>
+                        <option value="Cashier">Cashier</option>
+                        <option value="Kitchen">Kitchen</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="staffUsername" placeholder="e.g. maria_s">
+                </div>
+                <div class="form-group">
+                    <label id="staffPassLabel">Password *</label>
+                    <input type="password" id="staffPassword" placeholder="Min 6 characters">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="staffActive" checked>
+                    Active (can log in)
+                </label>
+            </div>
+            <div id="staffError" class="form-error" style="display:none;"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeStaffModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveStaff()">Save Staff</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+DATA HELPERS
+════════════════════════════════════════════════ */
+const DEFAULT_PRODUCTS = [
+    { id:1,  name:"Espresso",              category:"Coffees",  price:42.00, image:"images/espresso.jpg",   available:true },
+    { id:2,  name:"Americano",             category:"Coffees",  price:52.50, image:"images/americano.jpg",  available:true },
+    { id:3,  name:"Cappuccino",            category:"Coffees",  price:43.00, image:"images/cappuccino.jpg", available:true },
+    { id:4,  name:"Latte",                 category:"Coffees",  price:33.50, image:"images/latte.jpg",      available:true },
+    { id:5,  name:"Mocha",                 category:"Coffees",  price:34.00, image:"images/mocha.jpg",      available:true },
+    { id:6,  name:"Macchiato",             category:"Coffees",  price:32.75, image:"images/macchiato.jpg",  available:true },
+    { id:7,  name:"Malunggay Pandesal",    category:"Pastries", price:5.00,  image:"images/pandesal.jpg",   available:true },
+    { id:8,  name:"Egg Bread",             category:"Pastries", price:5.00,  image:"images/egg.jpg",        available:true },
+    { id:9,  name:"Pan de Coco",           category:"Pastries", price:5.00,  image:"images/coco.jpg",       available:true },
+    { id:10, name:"Choco/Vanilla Bavarian",category:"Pastries", price:10.00, image:"images/bavarian.jpg",   available:true }
+];
+
+const DEFAULT_STAFF = [
+    { id:1, name:"Administrator", role:"Manager", username:"admin", password:"admin123", active:true }
+];
+
+function getProducts()    { return JSON.parse(localStorage.getItem('bfc_products')  || JSON.stringify(DEFAULT_PRODUCTS)); }
+function saveProducts(d)  { localStorage.setItem('bfc_products', JSON.stringify(d)); }
+function getOrders()      { return JSON.parse(localStorage.getItem('bfc_orders')    || '[]'); }
+function saveOrders(d)    { localStorage.setItem('bfc_orders', JSON.stringify(d)); }
+function getStaff()       { return JSON.parse(localStorage.getItem('bfc_staff')     || JSON.stringify(DEFAULT_STAFF)); }
+function saveStaffData(d) { localStorage.setItem('bfc_staff', JSON.stringify(d)); }
+
+document.getElementById('loggedInAs').textContent = 'Admin Session';
+
+/* ════════════════════════════════════════════════
+TAB SWITCHING
+════════════════════════════════════════════════ */
+function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    btn.classList.add('active');
+    if (tab === 'dashboard') renderDashboard();
+    if (tab === 'products')  renderProducts();
+    if (tab === 'orders')    renderOrders();
+    if (tab === 'staff')     renderStaff();
+}
+
+function initDashboard() { renderDashboard(); renderProducts(); renderOrders(); renderStaff(); }
+
+function animateValue(el, targetText) {
+    const clean = String(targetText).replace(/,/g, '');
+    const match = clean.match(/^([₱])?([0-9]+(?:\.[0-9]+)?)$/);
+    if (!match) {
+        el.textContent = targetText;
+        return;
+    }
+    const prefix = match[1] || '';
+    const target = parseFloat(match[2]);
+    const hasDecimals = match[2].includes('.');
+    const duration = 550;
+    const start = performance.now();
+
+    function frame(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = target * eased;
+        el.textContent = prefix + (hasDecimals ? current.toFixed(2) : Math.round(current).toString());
+        if (progress < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
+function animateStatValues() {
+    document.querySelectorAll('.stat-val').forEach(el => {
+        animateValue(el, el.textContent.trim());
+    });
+}
+
+function enableInteractiveCards() {
+    document.querySelectorAll('.stat-card').forEach(card => {
+        card.onmousemove = e => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            const rotateY = (x - 0.5) * 7;
+            const rotateX = (0.5 - y) * 7;
+            card.style.transform = `translateY(-5px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        };
+        card.onmouseleave = () => {
+            card.style.transform = '';
+        };
+    });
+}
+
+/* ════════════════════════════════════════════════
+DASHBOARD
+════════════════════════════════════════════════ */
+function renderDashboard() {
+    const products  = getProducts();
+    const orders    = getOrders();
+    const staff     = getStaff();
+    const revenue   = orders.reduce((s, o) => s + o.total, 0);
+    const todayStr  = new Date().toLocaleDateString('en-PH');
+    const yesterdayStr = new Date(Date.now() - 86400000).toLocaleDateString('en-PH');
+    const todayOrders = orders.filter(o => o.timestamp && o.timestamp.startsWith(todayStr));
+    const todayRev  = todayOrders.reduce((s, o) => s + o.total, 0);
+    const yOrders = orders.filter(o => o.timestamp && o.timestamp.startsWith(yesterdayStr));
+    const yRev = yOrders.reduce((s, o) => s + o.total, 0);
+
+    function trend(curr, prev) {
+        if (prev === 0 && curr === 0) return { text: '—', cls: 'neutral' };
+        if (prev === 0 && curr > 0) return { text: 'New', cls: 'up' };
+        const pct = ((curr - prev) / Math.abs(prev)) * 100;
+        const rounded = Math.round(pct);
+        const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : 'neutral');
+        const sign = pct > 0 ? '+' : '';
+        return { text: `${sign}${rounded}%`, cls };
+    }
+
+    const ordersTrend = trend(orders.length, yOrders.length);
+    const revenueTrend = trend(revenue, yRev);
+    const todayRevTrend = trend(todayRev, yRev);
+
+    document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-val">${products.length}</div><div class="stat-label">Total Products</div></div>
+        <div class="stat-card"><div class="stat-val">${products.filter(p=>p.available).length}</div><div class="stat-label">Available</div></div>
+        <div class="stat-card"><div class="stat-val">${orders.length}</div><div class="stat-label">Total Orders <span class="trend ${ordersTrend.cls}"><span class="arrow">${ordersTrend.cls==='up'?'▲':ordersTrend.cls==='down'?'▼':''}</span>${ordersTrend.text}</span></div></div>
+        <div class="stat-card highlight"><div class="stat-val">&#8369;${revenue.toFixed(2)}</div><div class="stat-label">Total Revenue <span class="trend ${revenueTrend.cls}"><span class="arrow">${revenueTrend.cls==='up'?'▲':revenueTrend.cls==='down'?'▼':''}</span>${revenueTrend.text}</span></div></div>
+        <div class="stat-card"><div class="stat-val">${todayOrders.length}</div><div class="stat-label">Today's Orders</div></div>
+        <div class="stat-card highlight"><div class="stat-val">&#8369;${todayRev.toFixed(2)}</div><div class="stat-label">Today's Revenue <span class="trend ${todayRevTrend.cls}"><span class="arrow">${todayRevTrend.cls==='up'?'▲':todayRevTrend.cls==='down'?'▼':''}</span>${todayRevTrend.text}</span></div></div>
+        <div class="stat-card"><div class="stat-val">${staff.filter(s=>s.active).length}</div><div class="stat-label">Active Staff</div></div>
+    `;
+    animateStatValues();
+    enableInteractiveCards();
+
+    const tbody = document.getElementById('recentOrdersBody');
+    const recent = orders.slice(0, 10);
+    tbody.innerHTML = recent.length
+        ? recent.map((o, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${o.timestamp || '—'}</td>
+                <td>${o.items.map(x=>`${x.name} ×${x.quantity}`).join(', ')}</td>
+                <td>&#8369;${o.total.toFixed(2)}</td>
+            </tr>`).join('')
+        : `<tr><td colspan="4" class="empty-row">No orders yet.</td></tr>`;
+}
+
+/* ════════════════════════════════════════════════
+PRODUCTS
+════════════════════════════════════════════════ */
+function renderProducts() {
+    const products = getProducts();
+    document.getElementById('productsBody').innerHTML = products.length
+        ? products.map(p => `
+            <tr class="${p.available ? '' : 'row-disabled'}">
+                <td><img src="${p.image}" class="thumb" onerror="this.src='images/bfc.jpg'" alt="${p.name}"></td>
+                <td>${p.name}</td>
+                <td>${p.category}</td>
+                <td>&#8369;${p.price.toFixed(2)}</td>
+                <td>
+                    <span class="badge ${p.available ? 'badge-green' : 'badge-red'}">
+                        ${p.available ? 'Available' : 'Unavailable'}
+                    </span>
+                </td>
+                <td class="action-cell">
+                    <button class="btn-sm btn-edit" onclick="editProduct(${p.id})">Edit</button>
+                    <button class="btn-sm btn-toggle" onclick="toggleProduct(${p.id})">${p.available ? 'Disable' : 'Enable'}</button>
+                    <button class="btn-sm btn-del" onclick="deleteProduct(${p.id})">Delete</button>
+                </td>
+            </tr>`).join('')
+        : `<tr><td colspan="6" class="empty-row">No products found.</td></tr>`;
+}
+
+function openProductModal(id) {
+    document.getElementById('productId').value    = '';
+    document.getElementById('productName').value  = '';
+    document.getElementById('productCategory').value = '';
+    document.getElementById('productPrice').value = '';
+    document.getElementById('productImage').value = '';
+    document.getElementById('productAvailable').checked = true;
+    document.getElementById('productError').style.display = 'none';
+    document.getElementById('productModalTitle').textContent = 'Add Product';
+    // Populate category datalist
+    const cats = [...new Set(getProducts().map(p => p.category))];
+    document.getElementById('categoryList').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+    document.getElementById('productModal').classList.add('open');
+}
+
+function editProduct(id) {
+    const p = getProducts().find(x => x.id === id);
+    if (!p) return;
+    const cats = [...new Set(getProducts().map(x => x.category))];
+    document.getElementById('categoryList').innerHTML = cats.map(c => `<option value="${c}">`).join('');
+    document.getElementById('productId').value          = p.id;
+    document.getElementById('productName').value        = p.name;
+    document.getElementById('productCategory').value    = p.category;
+    document.getElementById('productPrice').value       = p.price;
+    document.getElementById('productImage').value       = p.image;
+    document.getElementById('productAvailable').checked = p.available;
+    document.getElementById('productError').style.display = 'none';
+    document.getElementById('productModalTitle').textContent = 'Edit Product';
+    document.getElementById('productModal').classList.add('open');
+}
+
+function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
+
+function saveProduct() {
+    const id        = document.getElementById('productId').value;
+    const name      = document.getElementById('productName').value.trim();
+    const category  = document.getElementById('productCategory').value.trim();
+    const price     = parseFloat(document.getElementById('productPrice').value);
+    const image     = document.getElementById('productImage').value.trim() || 'images/bfc.jpg';
+    const available = document.getElementById('productAvailable').checked;
+    const errEl     = document.getElementById('productError');
+
+    if (!name)         { showFormError(errEl, 'Product name is required.'); return; }
+    if (!category)     { showFormError(errEl, 'Category is required.'); return; }
+    if (isNaN(price) || price < 0) { showFormError(errEl, 'Please enter a valid price.'); return; }
+
+    const products = getProducts();
+    if (id) {
+        const idx = products.findIndex(p => p.id === parseInt(id));
+        if (idx !== -1) products[idx] = { ...products[idx], name, category, price, image, available };
+    } else {
+        const newId = products.reduce((max, p) => Math.max(max, p.id), 0) + 1;
+        products.push({ id: newId, name, category, price, image, available });
+    }
+    saveProducts(products);
+    closeProductModal();
+    renderProducts();
+    renderDashboard();
+}
+
+function toggleProduct(id) {
+    const products = getProducts();
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    p.available = !p.available;
+    saveProducts(products);
+    renderProducts();
+    renderDashboard();
+}
+
+function deleteProduct(id) {
+    if (!confirm('Delete this product permanently?')) return;
+    saveProducts(getProducts().filter(p => p.id !== id));
+    renderProducts();
+    renderDashboard();
+}
+
+/* ════════════════════════════════════════════════
+ORDERS
+════════════════════════════════════════════════ */
+function renderOrders() {
+    const orders = getOrders();
+    document.getElementById('ordersBody').innerHTML = orders.length
+        ? orders.map((o, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${o.timestamp || '—'}</td>
+                <td>${o.items.map(x=>`${x.name} ×${x.quantity}`).join(', ')}</td>
+                <td>&#8369;${o.total.toFixed(2)}</td>
+                <td>&#8369;${o.paid.toFixed(2)}</td>
+                <td>&#8369;${o.change.toFixed(2)}</td>
+            </tr>`).join('')
+        : `<tr><td colspan="6" class="empty-row">No orders in history.</td></tr>`;
+}
+
+function clearOrders() {
+    if (!confirm('Clear all order history? This cannot be undone.')) return;
+    saveOrders([]);
+    renderOrders();
+    renderDashboard();
+}
+
+/* ════════════════════════════════════════════════
+STAFF
+════════════════════════════════════════════════ */
+function renderStaff() {
+    const staff = getStaff();
+    document.getElementById('staffBody').innerHTML = staff.length
+        ? staff.map(s => `
+            <tr class="${s.active ? '' : 'row-disabled'}">
+                <td>${s.name}</td>
+                <td>${s.role}</td>
+                <td>${s.username}</td>
+                <td>
+                    <span class="badge ${s.active ? 'badge-green' : 'badge-red'}">
+                        ${s.active ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td class="action-cell">
+                    <button class="btn-sm btn-edit" onclick="editStaff(${s.id})">Edit</button>
+                    <button class="btn-sm btn-toggle" onclick="toggleStaff(${s.id})">${s.active ? 'Deactivate' : 'Activate'}</button>
+                    ${s.id !== 1 ? `<button class="btn-sm btn-del" onclick="deleteStaff(${s.id})">Delete</button>` : ''}
+                </td>
+            </tr>`).join('')
+        : `<tr><td colspan="5" class="empty-row">No staff found.</td></tr>`;
+}
+
+function openStaffModal() {
+    document.getElementById('staffId').value       = '';
+    document.getElementById('staffName').value     = '';
+    document.getElementById('staffRole').value     = '';
+    document.getElementById('staffUsername').value = '';
+    document.getElementById('staffPassword').value = '';
+    document.getElementById('staffActive').checked = true;
+    document.getElementById('staffError').style.display = 'none';
+    document.getElementById('staffModalTitle').textContent = 'Add Staff';
+    document.getElementById('staffPassLabel').textContent  = 'Password *';
+    document.getElementById('staffModal').classList.add('open');
+}
+
+function editStaff(id) {
+    const s = getStaff().find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('staffId').value       = s.id;
+    document.getElementById('staffName').value     = s.name;
+    document.getElementById('staffRole').value     = s.role;
+    document.getElementById('staffUsername').value = s.username;
+    document.getElementById('staffPassword').value = '';
+    document.getElementById('staffActive').checked = s.active;
+    document.getElementById('staffError').style.display = 'none';
+    document.getElementById('staffModalTitle').textContent = 'Edit Staff';
+    document.getElementById('staffPassLabel').textContent  = 'New Password (leave blank to keep)';
+    document.getElementById('staffModal').classList.add('open');
+}
+
+function closeStaffModal() { document.getElementById('staffModal').classList.remove('open'); }
+
+function saveStaff() {
+    const id       = document.getElementById('staffId').value;
+    const name     = document.getElementById('staffName').value.trim();
+    const role     = document.getElementById('staffRole').value;
+    const username = document.getElementById('staffUsername').value.trim();
+    const password = document.getElementById('staffPassword').value;
+    const active   = document.getElementById('staffActive').checked;
+    const errEl    = document.getElementById('staffError');
+
+    if (!name)     { showFormError(errEl, 'Full name is required.'); return; }
+    if (!role)     { showFormError(errEl, 'Please select a role.'); return; }
+    if (!username) { showFormError(errEl, 'Username is required.'); return; }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) { showFormError(errEl, 'Username may only contain letters, numbers, and underscores.'); return; }
+    if (!id && !password) { showFormError(errEl, 'Password is required for new staff.'); return; }
+    if (password && password.length < 6) { showFormError(errEl, 'Password must be at least 6 characters.'); return; }
+
+    const staff = getStaff();
+    // Check username uniqueness
+    const duplicate = staff.find(s => s.username === username && String(s.id) !== String(id));
+    if (duplicate) { showFormError(errEl, 'Username already in use. Choose a different one.'); return; }
+
+    if (id) {
+        const idx = staff.findIndex(s => s.id === parseInt(id));
+        if (idx !== -1) {
+            staff[idx] = { ...staff[idx], name, role, username, active };
+            if (password) staff[idx].password = password;
+        }
+    } else {
+        const newId = staff.reduce((max, s) => Math.max(max, s.id), 0) + 1;
+        staff.push({ id: newId, name, role, username, password, active });
+    }
+    saveStaffData(staff);
+    closeStaffModal();
+    renderStaff();
+    renderDashboard();
+}
+
+function toggleStaff(id) {
+    const staff = getStaff();
+    const s = staff.find(x => x.id === id);
+    if (!s) return;
+    if (id === 1 && s.active) { alert('Cannot deactivate the main administrator account.'); return; }
+    s.active = !s.active;
+    saveStaffData(staff);
+    renderStaff();
+    renderDashboard();
+}
+
+function deleteStaff(id) {
+    if (id === 1) { alert('Cannot delete the main administrator account.'); return; }
+    if (!confirm('Remove this staff member?')) return;
+    saveStaffData(getStaff().filter(s => s.id !== id));
+    renderStaff();
+    renderDashboard();
+}
+
+/* ════════════════════════════════════════════════
+UTILS
+════════════════════════════════════════════════ */
+function showFormError(el, msg) {
+    el.textContent   = msg;
+    el.style.display = 'block';
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+    });
+});
+
+/* Particle background */
+const canvas = document.getElementById('canvas1');
+const ctx = canvas.getContext('2d');
+let particlesArray = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    initParticles();
+}
+
+class Particle {
+    constructor() {
+        this.size = (Math.random() * 2.5) + 1;
+        this.x = (Math.random() * (innerWidth - this.size * 2)) + this.size;
+        this.y = (Math.random() * (innerHeight - this.size * 2)) + this.size;
+        this.directionX = (Math.random() * 1.5) - 0.75;
+        this.directionY = (Math.random() * 1.5) - 0.75;
+        this.color = '#d8b58a';
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+    update() {
+        if (this.x > canvas.width || this.x < 0) this.directionX *= -1;
+        if (this.y > canvas.height || this.y < 0) this.directionY *= -1;
+        this.x += this.directionX;
+        this.y += this.directionY;
+        this.draw();
+    }
+}
+
+function initParticles() {
+    particlesArray = [];
+    const count = (canvas.height * canvas.width) / 10000;
+    for (let i = 0; i < count; i++) particlesArray.push(new Particle());
+}
+
+function connectParticles() {
+    for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a + 1; b < particlesArray.length; b++) {
+            const dx = particlesArray[a].x - particlesArray[b].x;
+            const dy = particlesArray[a].y - particlesArray[b].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+                ctx.strokeStyle = `rgba(216,181,138,${1 - dist / 120})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function animateParticles() {
+    requestAnimationFrame(animateParticles);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particlesArray.forEach(p => p.update());
+    connectParticles();
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+animateParticles();
+
+initDashboard();
+</script>
+</body>
+</html>
