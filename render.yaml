@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: bfc-backend
-    env: docker
-    dockerfilePath: Dockerfile
-    plan: starter
-    autoDeploy: true

@@ -1,7 +1,16 @@
-const API_BASE = import.meta.env.VITE_PHP_API_BASE || '';
+const API_BASE = import.meta.env.VITE_PHP_API_BASE || (import.meta.env.DEV ? '' : 'https://bfc-backend.onrender.com');
+
+function apiUrl(path) {
+  if (!API_BASE) {
+    return path;
+  }
+
+  const normalizedBase = API_BASE.replace(/\/+$/, '');
+  return `${normalizedBase}${path.startsWith('/') ? '' : '/'}${path}`;
+}
 
 async function request(path, { method = 'GET', body, credentials = 'include', headers = {} } = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(apiUrl(path), {
     method,
     credentials,
     headers: {

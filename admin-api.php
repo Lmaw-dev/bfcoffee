@@ -1,28 +1,10 @@
 <?php
 session_start();
 
-// CORS for development - allow credentials from dev server
-$allowed = [
-    'http://localhost:3000'
-    
-];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed, true)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Access-Control-Allow-Credentials: true');
-} else {
-    header('Access-Control-Allow-Origin: http://localhost:3000');
-}
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+require_once __DIR__ . '/cors.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    if (in_array($origin, $allowed, true)) {
-        header('Access-Control-Allow-Credentials: true');
-    }
-    http_response_code(200);
-    exit();
-}
+bfcApplyCorsHeaders(true);
+bfcHandleCorsPreflight();
 
 header('Content-Type: application/json');
 
@@ -33,6 +15,35 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 
 include 'db-config.php';
+
+function normalizeProductRow(array $row): array
+{
+    $row['id'] = (int)($row['id'] ?? 0);
+    $row['price'] = (float)($row['price'] ?? 0);
+    $row['available'] = (bool)($row['available'] ?? false);
+
+    return $row;
+}
+
+function normalizeOrderRow(array $row): array
+{
+    $row['id'] = (int)($row['id'] ?? 0);
+    $row['items'] = json_decode((string)($row['items'] ?? '[]'), true) ?: [];
+    $row['total'] = (float)($row['total'] ?? 0);
+    $row['paid'] = (float)($row['paid'] ?? 0);
+    $row['change_amount'] = (float)($row['change_amount'] ?? 0);
+    $row['status'] = (string)($row['status'] ?? 'pending');
+
+    return $row;
+}
+
+function normalizeStaffRow(array $row): array
+{
+    $row['id'] = (int)($row['id'] ?? 0);
+    $row['active'] = (bool)($row['active'] ?? false);
+
+    return $row;
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -52,18 +63,18 @@ switch ($action) {
 
         $tables = ['registration', 'products', 'orders', 'staff', 'cafe_settings'];
         $tableStatus = [];
+        $schemaName = db_is_postgres($conn) ? 'public' : DB_NAME;
 
         foreach ($tables as $tableName) {
-            $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = ? AND table_name = ?");
-            $dbName = DB_NAME;
-            $stmt->bind_param('ss', $dbName, $tableName);
-            $stmt->execute();
-            $exists = (int)$stmt->get_result()->fetch_assoc()['c'] > 0;
-            $stmt->close();
+            $exists = (int)(db_fetch_value(
+                $conn,
+                'SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?',
+                [$schemaName, $tableName]
+            ) ?? 0) > 0;
 
             $rows = 0;
             if ($exists) {
-                $rows = (int)$conn->query("SELECT COUNT(*) AS c FROM `{$tableName}`")->fetch_assoc()['c'];
+                $rows = (int)(db_fetch_value($conn, "SELECT COUNT(*) FROM {$tableName}") ?? 0);
             }
 
             $tableStatus[] = [
@@ -85,13 +96,7 @@ switch ($action) {
     // PRODUCTS
     // ════════════════════════════════════════════════
     case 'get_products':
-        $result = $conn->query("SELECT * FROM products ORDER BY category, name");
-        $products = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['price'] = (float)$row['price'];
-            $row['available'] = (bool)$row['available'];
-            $products[] = $row;
-        }
+        $products = array_map('normalizeProductRow', db_fetch_all($conn, 'SELECT * FROM products ORDER BY category, name'));
         echo json_encode($products);
         break;
 
@@ -111,15 +116,13 @@ switch ($action) {
             }
 
             $stmt = $conn->prepare("INSERT INTO products (name, category, price, image, available) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssdsi", $name, $category, $price, $image, $available);
-            
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
+
+            if ($stmt->execute([$name, $category, $price, $image, $available])) {
+                echo json_encode(['success' => true, 'id' => (int)$conn->lastInsertId()]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to add product']);
             }
-            $stmt->close();
         }
         break;
 
@@ -140,15 +143,13 @@ switch ($action) {
             }
 
             $stmt = $conn->prepare("UPDATE products SET name=?, category=?, price=?, image=?, available=? WHERE id=?");
-            $stmt->bind_param("ssdsii", $name, $category, $price, $image, $available, $id);
-            
-            if ($stmt->execute()) {
+
+            if ($stmt->execute([$name, $category, $price, $image, $available, $id])) {
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to update product']);
             }
-            $stmt->close();
         }
         break;
 
@@ -164,15 +165,13 @@ switch ($action) {
             }
 
             $stmt = $conn->prepare("DELETE FROM products WHERE id=?");
-            $stmt->bind_param("i", $id);
-            
-            if ($stmt->execute()) {
+
+            if ($stmt->execute([$id])) {
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to delete product']);
             }
-            $stmt->close();
         }
         break;
 
@@ -181,19 +180,7 @@ switch ($action) {
     // ════════════════════════════════════════════════
     case 'get_orders':
         $limit = $_GET['limit'] ?? 100;
-        $result = $conn->query("SELECT * FROM orders ORDER BY order_date DESC LIMIT " . intval($limit));
-        $orders = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['items'] = json_decode($row['items'], true);
-            $row['total'] = (float)$row['total'];
-            $row['paid'] = (float)$row['paid'];
-            $row['change_amount'] = (float)$row['change_amount'];
-                // Ensure a status field exists in the returned object (DB may not have it on older installs)
-                if (!array_key_exists('status', $row) || $row['status'] === null) {
-                    $row['status'] = 'pending';
-                }
-            $orders[] = $row;
-        }
+        $orders = array_map('normalizeOrderRow', db_fetch_all($conn, 'SELECT * FROM orders ORDER BY order_date DESC LIMIT ' . intval($limit)));
         echo json_encode($orders);
         break;
 
@@ -209,28 +196,13 @@ switch ($action) {
                     break;
                 }
 
-                // Add status column if it does not exist (safe check)
-                $colCheck = $conn->prepare("SELECT COUNT(*) AS c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'orders' AND COLUMN_NAME = 'status'");
-                $dbName = DB_NAME;
-                $colCheck->bind_param('s', $dbName);
-                $colCheck->execute();
-                $exists = (int)$colCheck->get_result()->fetch_assoc()['c'] > 0;
-                $colCheck->close();
-
-                if (!$exists) {
-                    // Add the column with a default value
-                    $conn->query("ALTER TABLE orders ADD COLUMN status VARCHAR(50) DEFAULT 'pending'");
-                }
-
                 $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
-                $stmt->bind_param('si', $status, $id);
-                if ($stmt->execute()) {
+                if ($stmt->execute([$status, $id])) {
                     echo json_encode(['success' => true]);
                 } else {
                     http_response_code(500);
                     echo json_encode(['error' => 'Failed to update order status']);
                 }
-                $stmt->close();
             }
             break;
 
@@ -246,21 +218,19 @@ switch ($action) {
             $items_json = json_encode($items);
 
             $stmt = $conn->prepare("INSERT INTO orders (order_date, items, total, paid, change_amount) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssddd", $order_date, $items_json, $total, $paid, $change_amount);
-            
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
+
+            if ($stmt->execute([$order_date, $items_json, $total, $paid, $change_amount])) {
+                echo json_encode(['success' => true, 'id' => (int)$conn->lastInsertId()]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to add order']);
             }
-            $stmt->close();
         }
         break;
 
     case 'clear_orders':
         if ($method === 'POST') {
-            if ($conn->query("DELETE FROM orders")) {
+            if ($conn->exec("DELETE FROM orders") !== false) {
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);
@@ -273,12 +243,7 @@ switch ($action) {
     // STAFF
     // ════════════════════════════════════════════════
     case 'get_staff':
-        $result = $conn->query("SELECT id, name, role, username, active, created_at FROM staff ORDER BY name");
-        $staff = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['active'] = (bool)$row['active'];
-            $staff[] = $row;
-        }
+        $staff = array_map('normalizeStaffRow', db_fetch_all($conn, 'SELECT id, name, role, username, active, created_at FROM staff ORDER BY name'));
         echo json_encode($staff);
         break;
 
@@ -304,30 +269,22 @@ switch ($action) {
             }
 
             // Check if username already exists
-            $check = $conn->prepare("SELECT id FROM staff WHERE username = ? LIMIT 1");
-            $check->bind_param("s", $username);
-            $check->execute();
-            $checkResult = $check->get_result();
-            if ($checkResult->num_rows > 0) {
-                $check->close();
+            $existingStaffId = db_fetch_value($conn, 'SELECT id FROM staff WHERE username = ? LIMIT 1', [$username]);
+            if ($existingStaffId !== null) {
                 http_response_code(400);
                 echo json_encode(['error' => 'Username already exists']);
                 break;
             }
-            $check->close();
 
             // Hash the password before storing
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $conn->prepare("INSERT INTO staff (name, role, username, password, active) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssi", $name, $role, $username, $passwordHash, $active);
-            
-            if ($stmt->execute()) {
-                echo json_encode(['success' => true, 'id' => $conn->insert_id]);
+            if ($stmt->execute([$name, $role, $username, $passwordHash, $active])) {
+                echo json_encode(['success' => true, 'id' => (int)$conn->lastInsertId()]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to add staff']);
             }
-            $stmt->close();
         }
         break;
 
@@ -346,15 +303,13 @@ switch ($action) {
             }
 
             $stmt = $conn->prepare("UPDATE staff SET name=?, role=?, active=? WHERE id=?");
-            $stmt->bind_param("ssii", $name, $role, $active, $id);
-            
-            if ($stmt->execute()) {
+
+            if ($stmt->execute([$name, $role, $active, $id])) {
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to update staff']);
             }
-            $stmt->close();
         }
         break;
 
@@ -370,15 +325,13 @@ switch ($action) {
             }
 
             $stmt = $conn->prepare("DELETE FROM staff WHERE id=?");
-            $stmt->bind_param("i", $id);
-            
-            if ($stmt->execute()) {
+
+            if ($stmt->execute([$id])) {
                 echo json_encode(['success' => true]);
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Failed to delete staff']);
             }
-            $stmt->close();
         }
         break;
 
@@ -386,15 +339,15 @@ switch ($action) {
     // DASHBOARD STATS
     // ════════════════════════════════════════════════
     case 'get_stats':
-        $products_count = $conn->query("SELECT COUNT(*) as count FROM products")->fetch_assoc()['count'];
-        $available_count = $conn->query("SELECT COUNT(*) as count FROM products WHERE available=1")->fetch_assoc()['count'];
-        $orders_count = $conn->query("SELECT COUNT(*) as count FROM orders")->fetch_assoc()['count'];
-        $revenue = $conn->query("SELECT SUM(total) as total FROM orders")->fetch_assoc()['total'] ?? 0;
-        $staff_active = $conn->query("SELECT COUNT(*) as count FROM staff WHERE active=1")->fetch_assoc()['count'];
+        $products_count = (int)(db_fetch_value($conn, 'SELECT COUNT(*) FROM products') ?? 0);
+        $available_count = (int)(db_fetch_value($conn, 'SELECT COUNT(*) FROM products WHERE available = 1') ?? 0);
+        $orders_count = (int)(db_fetch_value($conn, 'SELECT COUNT(*) FROM orders') ?? 0);
+        $revenue = (float)(db_fetch_value($conn, 'SELECT COALESCE(SUM(total), 0) FROM orders') ?? 0);
+        $staff_active = (int)(db_fetch_value($conn, 'SELECT COUNT(*) FROM staff WHERE active = 1') ?? 0);
         
         $today = date('Y-m-d');
-        $today_orders = $conn->query("SELECT COUNT(*) as count FROM orders WHERE DATE(order_date)='$today'")->fetch_assoc()['count'];
-        $today_revenue = $conn->query("SELECT SUM(total) as total FROM orders WHERE DATE(order_date)='$today'")->fetch_assoc()['total'] ?? 0;
+        $today_orders = (int)(db_fetch_value($conn, 'SELECT COUNT(*) FROM orders WHERE DATE(order_date) = ?', [$today]) ?? 0);
+        $today_revenue = (float)(db_fetch_value($conn, 'SELECT COALESCE(SUM(total), 0) FROM orders WHERE DATE(order_date) = ?', [$today]) ?? 0);
 
         echo json_encode([
             'products_count' => (int)$products_count,

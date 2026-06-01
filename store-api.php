@@ -1,28 +1,8 @@
 <?php
-// Allow CORS for local development and accept JSON requests
-$allowed = [
-    'http://localhost:3001',
-    'http://localhost:3000'
-];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowed, true)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Access-Control-Allow-Credentials: true');
-} else {
-    // fallback to localhost (no credentials)
-    header('Access-Control-Allow-Origin: http://localhost:3001');
-}
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+require_once __DIR__ . '/cors.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    // respond to preflight
-    if (in_array($origin, $allowed, true)) {
-        header('Access-Control-Allow-Credentials: true');
-    }
-    http_response_code(200);
-    exit();
-}
+bfcApplyCorsHeaders(true);
+bfcHandleCorsPreflight();
 
 header('Content-Type: application/json');
 
@@ -33,15 +13,15 @@ $action = $_GET['action'] ?? '';
 
 switch ($action) {
     case 'get_products':
-        $result = $conn->query("SELECT id, name, category, price, image, available FROM products WHERE available = 1 ORDER BY category, name");
-        $products = [];
-        while ($row = $result->fetch_assoc()) {
+        $products = db_fetch_all($conn, "SELECT id, name, category, price, image, available FROM products WHERE available = 1 ORDER BY category, name");
+        $normalized = [];
+        foreach ($products as $row) {
             $row['id'] = (int)$row['id'];
             $row['price'] = (float)$row['price'];
             $row['available'] = (bool)$row['available'];
-            $products[] = $row;
+            $normalized[] = $row;
         }
-        echo json_encode($products);
+        echo json_encode($normalized);
         break;
 
     case 'add_order':
@@ -79,16 +59,13 @@ switch ($action) {
         $itemsJson = json_encode($items, JSON_UNESCAPED_UNICODE);
 
         $stmt = $conn->prepare('INSERT INTO orders (order_date, items, total, paid, change_amount) VALUES (?, ?, ?, ?, ?)');
-        $stmt->bind_param('ssddd', $orderDate, $itemsJson, $total, $paid, $changeAmount);
-        $stmt->execute();
+        $stmt->execute([$orderDate, $itemsJson, $total, $paid, $changeAmount]);
 
         echo json_encode([
             'success' => true,
-            'id' => (int)$conn->insert_id,
+            'id' => (int)$conn->lastInsertId(),
             'order_date' => $orderDate
         ]);
-
-        $stmt->close();
         break;
 
     default:

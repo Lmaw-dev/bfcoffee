@@ -1,9 +1,9 @@
-Deployment guide — Vercel (frontend) + Render (PHP backend)
+Deployment guide — Vercel (frontend) + Render (PHP backend) + Supabase (PostgreSQL)
 =========================================================
 
 This guide collects exact commands and steps to deploy the project live using:
 - Frontend: Vercel (static site from `react-app/dist`)
-- Backend: Render (Docker service running PHP + Apache), with an external MySQL host (DigitalOcean Managed DB or other)
+- Backend: Render (Docker service running PHP + Apache), with the existing Supabase PostgreSQL project as the database
 
 Prerequisites (local)
 - A GitHub account and the repo pushed to GitHub.
@@ -25,29 +25,25 @@ git branch -M main
 git push -u origin main
 ```
 
-2) Backend — Render Blueprint (must use the root `render.yaml`)
+2) Replace the existing Supabase project in place, then connect Render to it
 
 A. Ensure the root `Dockerfile` and root `render.yaml` are in your repo (already added).
 
-B. Create a MySQL database (managed) and note host, port, user, password and database name.
-   - You can use DigitalOcean Managed MySQL or another provider. Create database `web_system` and a user `jireh` with password `faith` (or use stronger password and update the steps accordingly).
+B. Open the existing Supabase project and go to the SQL editor.
+   - Run [`supabase/schema.sql`](supabase/schema.sql) to drop and recreate the app tables in place.
+   - This replaces the live project's current cafe tables and reseeds them with the repo data.
 
 C. On Render:
    1. New → Blueprint → Connect to your GitHub repo.
    2. Render will detect the root-level `render.yaml` and create `bfc-backend` service (docker).
    3. Set Environment variables in the Service Settings:
-      - `DB_HOST` = your managed DB host
-      - `DB_USER` = jireh
-      - `DB_PASS` = faith
-      - `DB_NAME` = web_system
+      - `DB_DRIVER` = `pgsql`
+      - `DATABASE_URL` = the existing Supabase database connection string (or `SUPABASE_DB_URL`)
    4. Deploy. The service will start and expose a public URL like `https://bfc-backend.onrender.com`.
 
-D. Import database (`bfc.sql`) into the managed MySQL (run from local machine):
+D. Verify the database import by checking the seeded tables in Supabase.
 
-```bash
-# if you have the mysql client installed locally
-mysql -h <DB_HOST> -P <DB_PORT> -u jireh -p'faith' web_system < bfc.sql
-```
+   - The seeded products, staff, orders, registration, users, and settings tables are defined in [`supabase/schema.sql`](supabase/schema.sql).
 
 E. Verify API endpoints:
 

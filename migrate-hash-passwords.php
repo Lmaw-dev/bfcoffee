@@ -8,13 +8,8 @@ require_once __DIR__ . '/db-config.php';
 echo "Starting staff password migration...\n";
 
 $res = $conn->query("SELECT id, password FROM staff");
-if (!$res) {
-    echo "Failed to read staff table: " . $conn->error . "\n";
-    exit(1);
-}
-
 $updated = 0;
-while ($row = $res->fetch_assoc()) {
+foreach (db_fetch_all($conn, "SELECT id, password FROM staff") as $row) {
     $id = (int)$row['id'];
     $pw = (string)$row['password'];
     // Heuristic: assume hashed if it starts with common algo prefixes
@@ -23,9 +18,9 @@ while ($row = $res->fetch_assoc()) {
     }
     $hash = password_hash($pw, PASSWORD_DEFAULT);
     $stmt = $conn->prepare("UPDATE staff SET password = ? WHERE id = ?");
-    $stmt->bind_param('si', $hash, $id);
-    if ($stmt->execute()) $updated++;
-    $stmt->close();
+    if ($stmt->execute([$hash, $id])) {
+        $updated++;
+    }
 }
 
 echo "Migration complete. Passwords hashed for {$updated} staff rows.\n";
