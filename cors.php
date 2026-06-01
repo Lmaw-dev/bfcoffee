@@ -9,7 +9,9 @@ function bfcAllowedOrigins(): array
             'http://localhost:3000',
             'http://localhost:3001',
             'http://127.0.0.1:3000',
-            'http://127.0.0.1:3001'
+            'http://127.0.0.1:3001',
+            'https://bfcoffee-6ogh.vercel.app',
+            'https://bfcoffee.vercel.app'
         ];
     }
 

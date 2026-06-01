@@ -1,5 +1,27 @@
 {
   "buildCommand": "cd react-app && npm ci && npm run build",
   "outputDirectory": "react-app/dist",
-  "installCommand": "cd react-app && npm ci"
+  "installCommand": "cd react-app && npm ci",
+  "rewrites": [
+    {
+      "source": "/menu",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/log-in",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cafe-admin",
+      "destination": "/index.html"
+    }
+  ]
 }
