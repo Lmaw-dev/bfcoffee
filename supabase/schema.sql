@@ -30,6 +30,14 @@ CREATE TABLE products (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read products" ON products;
+CREATE POLICY "Public read products"
+  ON products
+  FOR SELECT
+  USING (true);
+
 CREATE TABLE orders (
   id BIGSERIAL PRIMARY KEY,
   order_date TIMESTAMP NOT NULL,

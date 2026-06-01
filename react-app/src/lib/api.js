@@ -1,4 +1,6 @@
 const API_BASE = import.meta.env.VITE_PHP_API_BASE || (import.meta.env.DEV ? '' : 'https://bfc-backend.onrender.com');
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 function apiUrl(path) {
   if (!API_BASE) {
@@ -31,7 +33,39 @@ async function request(path, { method = 'GET', body, credentials = 'include', he
   return data;
 }
 
+async function fetchSupabaseProducts() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error('Supabase is not configured');
+  }
+
+  const endpoint = new URL('/rest/v1/products', SUPABASE_URL);
+  endpoint.searchParams.set('select', 'id,name,category,price,image,available');
+  endpoint.searchParams.set('available', 'eq.true');
+  endpoint.searchParams.set('order', 'category.asc,name.asc');
+
+  const response = await fetch(endpoint.toString(), {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Accept: 'application/json'
+    }
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message = Array.isArray(data) ? 'Failed to load Supabase products' : data?.message || data?.error || 'Failed to load Supabase products';
+    throw new Error(message);
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
 export function getProducts() {
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    return fetchSupabaseProducts();
+  }
+
   return request('/store-api.php?action=get_products');
 }
 

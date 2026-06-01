@@ -62,6 +62,8 @@ C. Configure:
    - Output Directory: `react-app/dist` if you build from the repo root, otherwise `dist` if Root Directory is `react-app`.
 D. Environment Variables (Vercel project settings):
    - `VITE_PHP_API_BASE` = `https://bfc-backend.onrender.com` (replace with your Render URL)
+   - `VITE_SUPABASE_URL` = your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY` = your Supabase anon/public key
 E. Deploy. Vercel will build and host the frontend; it will provide a public URL with HTTPS.
 
 4) Verify end-to-end

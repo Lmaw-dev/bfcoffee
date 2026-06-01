@@ -155,7 +155,7 @@ export default function MenuPage({ navigate }) {
                     <span className="section-icon">☕</span>
                     <div>
                       <h2 className="section-title">{groupName}</h2>
-                      <p className="section-subtitle">Live products from the PHP API</p>
+                      <p className="section-subtitle">Live products from Supabase</p>
                     </div>
                   </div>
 
@@ -215,7 +215,7 @@ export default function MenuPage({ navigate }) {
                 ))}
               </div>
 
-              <div className="checkout-note">Products are loaded from the existing PHP API and payment is posted back to the MySQL-backed store endpoint.</div>
+              <div className="checkout-note">Products are loaded directly from Supabase when the Vercel app has the Supabase env vars configured.</div>
 
               <div className="totals">
                 <label>
